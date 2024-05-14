@@ -72,8 +72,8 @@ public class FireHudConfig implements ConfigData {
     
     @ConfigEntry.Gui.PrefixText
     public boolean configButtonInSettings = true;
-    public int configButtonX = -184;
-    public int configButtonY = 74;
+    public int configButtonX = 328;
+    public int configButtonY = 44;
     
     
     public enum VignetteOptions { OFF, FULL, UPPER, LOWER }
