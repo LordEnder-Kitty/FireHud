@@ -1,0 +1,28 @@
+{
+	"schemaVersion": 1,
+	"id": "firehud",
+	"version": "${version}",
+	"name": "Fire Hud",
+	"description": "Redesigns the visuals of being set on fire to be less intrusive",
+	"authors": [ "LordEnder_Kitty" ],
+	"contact": {},
+	"license": "MIT",
+	"icon": "assets/firehud/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [ "net.enderkitty.FireHud" ],
+		"modmenu": [ "net.enderkitty.config.ModMenuImpl" ]
+	},
+	"mixins": [ "firehud.mixins.json" ],
+	"accessWidener" : "firehud.accesswidener",
+	"depends": {
+		"fabricloader": ">=0.15.9",
+		"minecraft": [
+			"1.20.3",
+			"1.20.4"
+		],
+		"java": ">=17",
+		"fabric-api": "*",
+		"cloth-config2": "*"
+	}
+}
