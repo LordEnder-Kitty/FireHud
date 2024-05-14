@@ -17,10 +17,7 @@
 	"accessWidener" : "firehud.accesswidener",
 	"depends": {
 		"fabricloader": ">=0.15.9",
-		"minecraft": [
-			"1.20.3",
-			"1.20.4"
-		],
+		"minecraft": "~1.20.5",
 		"java": ">=17",
 		"fabric-api": "*",
 		"cloth-config2": "*"
