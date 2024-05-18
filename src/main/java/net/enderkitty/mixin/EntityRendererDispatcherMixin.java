@@ -5,6 +5,7 @@ import net.enderkitty.SoulFireAccessor;
 import net.enderkitty.config.FireHudConfig;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.texture.Sprite;
@@ -32,10 +33,12 @@ public class EntityRendererDispatcherMixin {
     
     @Inject(method = "renderFire", at = @At(value = "HEAD"), cancellable = true)
     private void renderThirdPersonFire(MatrixStack matrices, VertexConsumerProvider vertexConsumers, Entity entity, Quaternionf rotation, CallbackInfo ci) {
-        if ((!config.renderVanillaHud && !config.sideFire && config.fireVignette == FireHudConfig.VignetteOptions.OFF && !config.fireScreenTint && (!config.renderFireInLava && entity.isOnFire()) && 
-                (!config.renderWithFireResistance && ((LivingEntity) entity).hasStatusEffect(StatusEffects.FIRE_RESISTANCE))) || !config.renderThirdPersonFire) {
-            
-            ci.cancel();
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        if (client.player != null && client.player.isOnFire()) {
+            if ((!config.renderThirdPersonFireInLava && client.player.isInLava())) ci.cancel();
+            if ((!config.renderWithFireResistance && client.player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))) ci.cancel();
+            if (!config.renderThirdPersonFire) ci.cancel();
         }
     }
     

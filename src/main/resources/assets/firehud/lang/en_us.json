@@ -45,6 +45,7 @@
   "text.autoconfig.firehud.option.renderFireInLava.@PrefixText": "Lava",
   "text.autoconfig.firehud.option.renderFireInLava.@Tooltip": "Toggles rendering the fire hud when in lava",
   "text.autoconfig.firehud.option.renderFireInLava": "Render Fire In Lava",
+  "text.autoconfig.firehud.option.renderThirdPersonFireInLava": "Third Person Fire In Lava",
   "text.autoconfig.firehud.option.renderLavaFog.@Tooltip": "Toggles rendering the fog effect when in lava, making it easier to see",
   "text.autoconfig.firehud.option.renderLavaFog": "Render Lava Fog",
   

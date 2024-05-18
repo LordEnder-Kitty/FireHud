@@ -35,7 +35,8 @@ public class InGameOverlayRendererMixin {
     
     @Inject(method = "renderOverlays", at = @At("TAIL"))
     private static void renderOverlays(MinecraftClient client, MatrixStack matrices, CallbackInfo ci) {
-        if (client.player != null && !client.player.isSpectator() && client.player.isOnFire() && config.sideFire) {
+        if (client.player != null && !client.player.isSpectator() && client.player.isOnFire() && config.sideFire &&
+                !(!config.renderFireInLava && client.player.isInLava()) && !(!config.renderWithFireResistance && client.player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))) {
             renderSideFireOverlay(client, matrices);
         }
     }
