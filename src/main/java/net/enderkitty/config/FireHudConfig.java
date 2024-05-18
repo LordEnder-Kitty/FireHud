@@ -56,6 +56,7 @@ public class FireHudConfig implements ConfigData {
     @ConfigEntry.Gui.PrefixText
     @ConfigEntry.Gui.Tooltip
     public boolean renderFireInLava = true;
+    public boolean renderThirdPersonFireInLava = true;
     @ConfigEntry.Gui.Tooltip
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public LavaFogOptions renderLavaFog = LavaFogOptions.VANILLA;

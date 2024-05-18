@@ -5,13 +5,13 @@ import net.enderkitty.SoulFireAccessor;
 import net.enderkitty.config.FireHudConfig;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.util.Identifier;
@@ -32,16 +32,18 @@ public class EntityRendererDispatcherMixin {
     
     @Inject(method = "renderFire", at = @At(value = "HEAD"), cancellable = true)
     private void renderThirdPersonFire(MatrixStack matrices, VertexConsumerProvider vertexConsumers, Entity entity, Quaternionf rotation, CallbackInfo ci) {
-        if ((!config.renderVanillaHud && !config.sideFire && config.fireVignette == FireHudConfig.VignetteOptions.OFF && !config.fireScreenTint && (!config.renderFireInLava && entity.isOnFire()) && 
-                (!config.renderWithFireResistance && ((LivingEntity) entity).hasStatusEffect(StatusEffects.FIRE_RESISTANCE))) || !config.renderThirdPersonFire) {
-            
-            ci.cancel();
+        MinecraftClient client = MinecraftClient.getInstance();
+        
+        if (client.player != null && client.player.isOnFire()) {
+            if ((!config.renderThirdPersonFireInLava && client.player.isInLava())) ci.cancel();
+            if ((!config.renderWithFireResistance && client.player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))) ci.cancel();
+            if (!config.renderThirdPersonFire) ci.cancel();
         }
     }
     
     @Redirect(method = "renderFire", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/SpriteIdentifier;getSprite()Lnet/minecraft/client/texture/Sprite;", ordinal = 0))
     private Sprite getSprite0(SpriteIdentifier obj, MatrixStack matrices, VertexConsumerProvider vertexConsumers, Entity entity) {
-        if (config.renderSoulFire && ((SoulFireAccessor)entity).isRenderSoulFire()) {
+        if (config.renderSoulFire && ((SoulFireAccessor) entity).isRenderSoulFire()) {
             return SOUL_FIRE_0.getSprite();
         }
         return obj.getSprite();
@@ -49,7 +51,7 @@ public class EntityRendererDispatcherMixin {
     
     @Redirect(method = "renderFire", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/SpriteIdentifier;getSprite()Lnet/minecraft/client/texture/Sprite;", ordinal = 1))
     private Sprite getSprite1(SpriteIdentifier obj, MatrixStack matrices, VertexConsumerProvider vertexConsumers, Entity entity) {
-        if (config.renderSoulFire && ((SoulFireAccessor)entity).isRenderSoulFire()) {
+        if (config.renderSoulFire && ((SoulFireAccessor) entity).isRenderSoulFire()) {
             return SOUL_FIRE_1.getSprite();
         }
         return obj.getSprite();
