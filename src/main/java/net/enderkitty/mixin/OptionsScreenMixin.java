@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class OptionsScreenMixin extends Screen {
     @Shadow @Final private ThreePartsLayoutWidget layout;
     @Unique private static final ButtonTextures TEXTURES = new ButtonTextures(
-            new Identifier(FireHud.MOD_ID, "widget/config_button"), new Identifier(FireHud.MOD_ID, "widget/config_button_highlighted"));
+            Identifier.of(FireHud.MOD_ID, "widget/config_button"), Identifier.of(FireHud.MOD_ID, "widget/config_button_highlighted"));
     
     public OptionsScreenMixin(Text title) { super(title); }
     
