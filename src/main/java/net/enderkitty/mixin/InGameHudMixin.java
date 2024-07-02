@@ -59,7 +59,7 @@ public abstract class InGameHudMixin {
                     ci.cancel();
                 }
                 if (config.renderSoulFire) {
-                    if ((playerEntity.isOnFire() && ((SoulFireAccessor) playerEntity).isRenderSoulFire()) || 
+                    if ((playerEntity.isOnFire() && ((SoulFireAccessor) playerEntity).fireHud$isRenderSoulFire()) || 
                             (!EnchantmentHelper.hasFrostWalker(playerEntity) && playerEntity.getSteppingBlockState().getBlock() == Blocks.SOUL_CAMPFIRE)) {
                         
                         context.drawGuiTexture(getSoulFireHeartTexture(hardcore, half, blinking), x, y, 9, 9);
@@ -76,7 +76,7 @@ public abstract class InGameHudMixin {
         MinecraftClient client = MinecraftClient.getInstance();
         PlayerEntity player = client.player;
         
-        Identifier texture = player != null && ((SoulFireAccessor) player).isRenderSoulFire() ? SOUL_FIRE_VIGNETTE : FIRE_VIGNETTE;
+        Identifier texture = player != null && ((SoulFireAccessor) player).fireHud$isRenderSoulFire() ? SOUL_FIRE_VIGNETTE : FIRE_VIGNETTE;
         int hudScale = config.vignetteScale;
         int width = context.getScaledWindowWidth();
         int height = context.getScaledWindowHeight();

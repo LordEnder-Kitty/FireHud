@@ -7,6 +7,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.render.BackgroundRenderer;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,6 +23,19 @@ public class BackgroundRendererMixin {
     @Redirect(method = "applyFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isSpectator()Z"))
     private static boolean applyFog(Entity entity) {
         return config.renderLavaFog == FireHudConfig.LavaFogOptions.LIGHT_FOG;
+    }
+    
+    @Redirect(method = "applyFog", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/BackgroundRenderer$FogData;fogEnd:F", ordinal = 0, opcode = Opcodes.PUTFIELD))
+    private static void viewDistFogEndFix(BackgroundRenderer.FogData fogData, float value) {
+        if (config.renderLavaFog == FireHudConfig.LavaFogOptions.LIGHT_FOG) {
+            fogData.fogEnd = config.lightFogDist;
+        }
+    }
+    @Redirect(method = "applyFog", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/BackgroundRenderer$FogData;fogStart:F", ordinal = 0, opcode = Opcodes.PUTFIELD))
+    private static void viewDistFogStartFix(BackgroundRenderer.FogData fogData, float value) {
+        if (config.renderLavaFog == FireHudConfig.LavaFogOptions.LIGHT_FOG) {
+            fogData.fogStart = 0;
+        }
     }
     
     

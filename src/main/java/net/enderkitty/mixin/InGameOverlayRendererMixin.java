@@ -63,7 +63,7 @@ public class InGameOverlayRendererMixin {
     
     @Redirect(method = "renderFireOverlay", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/SpriteIdentifier;getSprite()Lnet/minecraft/client/texture/Sprite;"))
     private static Sprite getSprite(SpriteIdentifier obj, MinecraftClient client) {
-        if (config.renderSoulFire && ((SoulFireAccessor) client.player).isRenderSoulFire()) return SOUL_FIRE_1.getSprite();
+        if (config.renderSoulFire && ((SoulFireAccessor) client.player).fireHud$isRenderSoulFire()) return SOUL_FIRE_1.getSprite();
         return obj.getSprite();
     }
     
@@ -75,7 +75,7 @@ public class InGameOverlayRendererMixin {
         RenderSystem.depthFunc(519);
         RenderSystem.depthMask(false);
         RenderSystem.enableBlend();
-        Sprite sprite = (config.renderSoulFire && ((SoulFireAccessor) client.player).isRenderSoulFire() ? SOUL_FIRE_1.getSprite() : ModelLoader.FIRE_1.getSprite());
+        Sprite sprite = (config.renderSoulFire && ((SoulFireAccessor) client.player).fireHud$isRenderSoulFire() ? SOUL_FIRE_1.getSprite() : ModelLoader.FIRE_1.getSprite());
         RenderSystem.setShaderTexture(0, sprite.getAtlasId());
         float f = sprite.getMinU();
         float g = sprite.getMaxU();
