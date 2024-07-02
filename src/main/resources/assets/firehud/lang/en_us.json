@@ -48,6 +48,8 @@
   "text.autoconfig.firehud.option.renderThirdPersonFireInLava": "Third Person Fire In Lava",
   "text.autoconfig.firehud.option.renderLavaFog.@Tooltip": "Toggles rendering the fog effect when in lava, making it easier to see",
   "text.autoconfig.firehud.option.renderLavaFog": "Render Lava Fog",
+  "text.autoconfig.firehud.option.lightFogDist.@Tooltip": "The view distance when in lava with Render Lava Fog set to LIGHT_FOG",
+  "text.autoconfig.firehud.option.lightFogDist": "Light Fog Distance",
   
   "text.autoconfig.firehud.option.renderWithFireResistance.@PrefixText": "Fire Resistance",
   "text.autoconfig.firehud.option.renderWithFireResistance.@Tooltip": "Toggles rendering the hud when under the Fire Resistance status effect",

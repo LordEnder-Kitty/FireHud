@@ -1,6 +1,6 @@
 package net.enderkitty;
 
 public interface SoulFireAccessor {
-    boolean isRenderSoulFire();
-    void setRenderSoulFire(boolean renderSoulFire);
+    boolean fireHud$isRenderSoulFire();
+    void fireHud$setRenderSoulFire(boolean renderSoulFire);
 }
