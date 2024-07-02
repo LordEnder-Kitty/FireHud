@@ -1,6 +1,7 @@
 package net.enderkitty.mixin;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.enderkitty.EnchantTags;
 import net.enderkitty.FireHud;
 import net.enderkitty.SoulFireAccessor;
 import net.enderkitty.config.FireHudConfig;
@@ -11,12 +12,14 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.enchantment.Enchantments;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -25,6 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Environment(EnvType.CLIENT)
 @Mixin(InGameHud.class)
 public abstract class InGameHudMixin {
+    @Shadow private ItemStack currentStack;
     @Unique private static final Identifier FIRE_VIGNETTE = Identifier.of(FireHud.MOD_ID, "textures/fire/fire_vignette.png");
     @Unique private static final Identifier SOUL_FIRE_VIGNETTE = Identifier.of(FireHud.MOD_ID, "textures/fire/soul_fire_vignette.png");
     
@@ -53,14 +57,15 @@ public abstract class InGameHudMixin {
     private void drawHeart(DrawContext context, InGameHud.HeartType type, int x, int y, boolean hardcore, boolean blinking, boolean half, CallbackInfo ci) {
         if (MinecraftClient.getInstance().cameraEntity instanceof PlayerEntity playerEntity && !(!config.renderWithFireResistance && playerEntity.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))) {
             if (config.renderFireHearts && type == InGameHud.HeartType.NORMAL) {
-                if (playerEntity.isOnFire() || ((playerEntity.getSteppingBlockState().getBlock() == Blocks.MAGMA_BLOCK && !playerEntity.bypassesSteppingEffects()) || 
-                        playerEntity.getSteppingBlockState().getBlock() == Blocks.CAMPFIRE)) {
-                    
+                boolean hasFrostWalkerOnBoots = EnchantmentHelper.hasAnyEnchantmentsIn(playerEntity.getEquippedStack(EquipmentSlot.FEET), EnchantTags.FROST_WALKER);
+                
+                if (playerEntity.isOnFire() || (!hasFrostWalkerOnBoots && ((playerEntity.getSteppingBlockState().getBlock() == Blocks.MAGMA_BLOCK && !playerEntity.bypassesSteppingEffects()) || 
+                        playerEntity.getSteppingBlockState().getBlock() == Blocks.CAMPFIRE))) {
                     context.drawGuiTexture(getFireHeartTexture(hardcore, half, blinking), x, y, 9, 9);
                     ci.cancel();
                 }
                 if (config.renderSoulFire) {
-                    if ((playerEntity.isOnFire() && ((SoulFireAccessor) playerEntity).isRenderSoulFire()) || playerEntity.getSteppingBlockState().getBlock() == Blocks.SOUL_CAMPFIRE) {
+                    if ((playerEntity.isOnFire() && ((SoulFireAccessor) playerEntity).fireHud$isRenderSoulFire()) || (!hasFrostWalkerOnBoots && playerEntity.getSteppingBlockState().getBlock() == Blocks.SOUL_CAMPFIRE)) {
                         context.drawGuiTexture(getSoulFireHeartTexture(hardcore, half, blinking), x, y, 9, 9);
                         ci.cancel();
                     }
@@ -75,7 +80,7 @@ public abstract class InGameHudMixin {
         MinecraftClient client = MinecraftClient.getInstance();
         PlayerEntity player = client.player;
         
-        Identifier texture = player != null && ((SoulFireAccessor) player).isRenderSoulFire() ? SOUL_FIRE_VIGNETTE : FIRE_VIGNETTE;
+        Identifier texture = player != null && ((SoulFireAccessor) player).fireHud$isRenderSoulFire() ? SOUL_FIRE_VIGNETTE : FIRE_VIGNETTE;
         int hudScale = config.vignetteScale;
         int width = context.getScaledWindowWidth();
         int height = context.getScaledWindowHeight();
