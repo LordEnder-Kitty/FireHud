@@ -13,12 +13,12 @@ public class ClientEntityMixin implements SoulFireAccessor {
     @Unique private boolean renderSoulFire;
 
     @Override
-    public boolean isRenderSoulFire() {
+    public boolean fireHud$isRenderSoulFire() {
         return renderSoulFire;
     }
 
     @Override
-    public void setRenderSoulFire(boolean renderSoulFire) {
+    public void fireHud$setRenderSoulFire(boolean renderSoulFire) {
         this.renderSoulFire = renderSoulFire;
     }
 }

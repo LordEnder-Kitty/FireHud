@@ -60,6 +60,9 @@ public class FireHudConfig implements ConfigData {
     @ConfigEntry.Gui.Tooltip
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public LavaFogOptions renderLavaFog = LavaFogOptions.VANILLA;
+    @ConfigEntry.Gui.Tooltip
+    @ConfigEntry.BoundedDiscrete(max = 100)
+    public int lightFogDist = 50;
     
     @ConfigEntry.Gui.PrefixText
     @ConfigEntry.Gui.Tooltip
