@@ -63,8 +63,8 @@
   
   "text.autoconfig.firehud.option.configButtonInSettings.@PrefixText": "游戏设置",
   "text.autoconfig.firehud.option.configButtonInSettings": "设置配置菜单热键",
-  "text.autoconfig.firehud.option.configButtonX": "Config Button X",
-  "text.autoconfig.firehud.option.configButtonY": "Config Button Y",
+  "text.autoconfig.firehud.option.configButtonX": "配置按钮坐标 X轴",
+  "text.autoconfig.firehud.option.configButtonY": "配置按钮坐标 Y轴",
   
   
   "text.firehud.hud.fireResTimer": "抗火: ",
