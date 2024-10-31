@@ -7,19 +7,19 @@ import net.enderkitty.SoulFireAccessor;
 import net.enderkitty.config.FireHudConfig;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.tag.client.v1.ClientTags;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -28,7 +28,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Environment(EnvType.CLIENT)
 @Mixin(InGameHud.class)
 public abstract class InGameHudMixin {
-    @Shadow private ItemStack currentStack;
     @Unique private static final Identifier FIRE_VIGNETTE = Identifier.of(FireHud.MOD_ID, "textures/fire/fire_vignette.png");
     @Unique private static final Identifier SOUL_FIRE_VIGNETTE = Identifier.of(FireHud.MOD_ID, "textures/fire/soul_fire_vignette.png");
     
@@ -57,7 +56,12 @@ public abstract class InGameHudMixin {
     private void drawHeart(DrawContext context, InGameHud.HeartType type, int x, int y, boolean hardcore, boolean blinking, boolean half, CallbackInfo ci) {
         if (MinecraftClient.getInstance().cameraEntity instanceof PlayerEntity playerEntity && !(!config.renderWithFireResistance && playerEntity.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))) {
             if (config.renderFireHearts && type == InGameHud.HeartType.NORMAL) {
-                boolean hasFrostWalkerOnBoots = EnchantmentHelper.hasAnyEnchantmentsIn(playerEntity.getEquippedStack(EquipmentSlot.FEET), EnchantTags.FROST_WALKER);
+                boolean hasFrostWalkerOnBoots = false;
+                for (RegistryEntry<Enchantment> enchantment : playerEntity.getEquippedStack(EquipmentSlot.FEET).getEnchantments().getEnchantments()) {
+                    if (ClientTags.isInWithLocalFallback(EnchantTags.FROST_WALKER, enchantment)) {
+                        hasFrostWalkerOnBoots = true;
+                    }
+                }
                 
                 if (playerEntity.isOnFire() || (!hasFrostWalkerOnBoots && ((playerEntity.getSteppingBlockState().getBlock() == Blocks.MAGMA_BLOCK && !playerEntity.bypassesSteppingEffects()) || 
                         playerEntity.getSteppingBlockState().getBlock() == Blocks.CAMPFIRE))) {

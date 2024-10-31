@@ -7,6 +7,7 @@ import net.enderkitty.config.FireHudConfig;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffectUtil;
@@ -25,8 +26,10 @@ public class FireHud implements ClientModInitializer {
 	public void onInitializeClient() {
 		LOGGER.info("FireHud is loaded! Enjoy configuring your fire hud!");
 		
-		ConfigHolder<FireHudConfig> configHolder = AutoConfig.register(FireHudConfig.class, GsonConfigSerializer::new);
-		FireHud.config = configHolder.getConfig();
+		if (isClothConfigLoaded()) {
+			ConfigHolder<FireHudConfig> configHolder = AutoConfig.register(FireHudConfig.class, GsonConfigSerializer::new);
+			FireHud.config = configHolder.getConfig();
+		}
 		
 		HudRenderCallback.EVENT.register((context, tickDelta) -> {
 			MinecraftClient client = MinecraftClient.getInstance();
@@ -69,5 +72,9 @@ public class FireHud implements ClientModInitializer {
 	
 	public static FireHudConfig getConfig() {
 		return FireHud.config;
+	}
+	
+	public static boolean isClothConfigLoaded() {
+		return FabricLoader.getInstance().isModLoaded("cloth-config2");
 	}
 }

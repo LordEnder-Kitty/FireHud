@@ -34,7 +34,7 @@ public class OptionsScreenMixin extends Screen {
     private void init(CallbackInfo ci) {
         FireHudConfig config = FireHud.getConfig();
         
-        if (config.configButtonInSettings) {
+        if (FireHud.isClothConfigLoaded() && config.configButtonInSettings) {
             ButtonWidget button = new TexturedButtonWidget(0, 0, 20, 20, TEXTURES, press -> {
                 MinecraftClient.getInstance().setScreen(AutoConfig.getConfigScreen(FireHudConfig.class, this).get());
             });
