@@ -1,9 +1,8 @@
 package net.enderkitty.mixin;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.enderkitty.EnchantTags;
 import net.enderkitty.FireHud;
-import net.enderkitty.SoulFireAccessor;
+import net.enderkitty.SoulFireEntityAccessor;
 import net.enderkitty.config.FireHudConfig;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -12,6 +11,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EquipmentSlot;
@@ -19,6 +19,7 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.ColorHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -65,12 +66,12 @@ public abstract class InGameHudMixin {
                 
                 if (playerEntity.isOnFire() || (!hasFrostWalkerOnBoots && ((playerEntity.getSteppingBlockState().getBlock() == Blocks.MAGMA_BLOCK && !playerEntity.bypassesSteppingEffects()) || 
                         playerEntity.getSteppingBlockState().getBlock() == Blocks.CAMPFIRE))) {
-                    context.drawGuiTexture(getFireHeartTexture(hardcore, half, blinking), x, y, 9, 9);
+                    context.drawGuiTexture(RenderLayer::getGuiTextured, getFireHeartTexture(hardcore, half, blinking), x, y, 9, 9);
                     ci.cancel();
                 }
                 if (config.renderSoulFire) {
-                    if ((playerEntity.isOnFire() && ((SoulFireAccessor) playerEntity).fireHud$isRenderSoulFire()) || (!hasFrostWalkerOnBoots && playerEntity.getSteppingBlockState().getBlock() == Blocks.SOUL_CAMPFIRE)) {
-                        context.drawGuiTexture(getSoulFireHeartTexture(hardcore, half, blinking), x, y, 9, 9);
+                    if ((playerEntity.isOnFire() && ((SoulFireEntityAccessor) playerEntity).fireHud$isOnSoulFire()) || (!hasFrostWalkerOnBoots && playerEntity.getSteppingBlockState().getBlock() == Blocks.SOUL_CAMPFIRE)) {
+                        context.drawGuiTexture(RenderLayer::getGuiTextured, getSoulFireHeartTexture(hardcore, half, blinking), x, y, 9, 9);
                         ci.cancel();
                     }
                 }
@@ -78,19 +79,24 @@ public abstract class InGameHudMixin {
         }
     }
     
+    @Unique
+    private boolean scaleHelper(int scale) {
+        int hudScale = config.vignetteScale;
+        int guiScale = MinecraftClient.getInstance().options.getGuiScale().getValue();
+        return hudScale == scale || hudScale == 0 && guiScale == scale;
+    }
     
-    @Inject(method = "renderMiscOverlays", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getFrozenTicks()I", shift = At.Shift.BEFORE))
+    @Inject(method = "renderMiscOverlays", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getFrozenTicks()I"))
     private void render(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         MinecraftClient client = MinecraftClient.getInstance();
         PlayerEntity player = client.player;
         
-        Identifier texture = player != null && ((SoulFireAccessor) player).fireHud$isRenderSoulFire() ? SOUL_FIRE_VIGNETTE : FIRE_VIGNETTE;
-        int hudScale = config.vignetteScale;
+        Identifier texture = player != null && ((SoulFireEntityAccessor) player).fireHud$isOnSoulFire() ? SOUL_FIRE_VIGNETTE : FIRE_VIGNETTE;
         int width = context.getScaledWindowWidth();
         int height = context.getScaledWindowHeight();
-        int var1 = hudScale == 4 ? 1 : hudScale == 3 ? 2 : hudScale == 2 ? 3 : hudScale == 1 ? 4 : 1;
-        int var2 = hudScale == 4 ? 2 : hudScale == 3 ? 4 : hudScale == 2 ? 6 : hudScale == 1 ? 8 : 2;
-        int var3 = hudScale == 4 ? 1 : hudScale == 3 ? 3 : hudScale == 2 ? 5 : hudScale == 1 ? 7 : 3;
+        int var1 = scaleHelper(4) ? 1 : scaleHelper(3) ? 2 : scaleHelper(2) ? 3 : scaleHelper(1) ? 4 : 1;
+        int var2 = scaleHelper(4) ? 2 : scaleHelper(3) ? 4 : scaleHelper(2) ? 6 : scaleHelper(1) ? 8 : 2;
+        int var3 = scaleHelper(4) ? 1 : scaleHelper(3) ? 3 : scaleHelper(2) ? 5 : scaleHelper(1) ? 7 : 3;
         
         if (player != null) {
             if (!(!config.renderFireInLava && player.isInLava())) {
@@ -135,13 +141,8 @@ public abstract class InGameHudMixin {
     
     @Unique
     private void renderOverlay(DrawContext context, Identifier texture, float opacity, int xPos, int yPos, int uStart, int vStart, int uEnd, int vEnd, int textureWidth, int textureHeight) {
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
-        context.setShaderColor(1.0f, 1.0f, 1.0f, opacity);
-        context.drawTexture(texture, xPos, yPos, -90, uStart, vStart, uEnd, vEnd, textureWidth, textureHeight);
-        RenderSystem.depthMask(true);
-        RenderSystem.enableDepthTest();
-        context.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        int i = ColorHelper.getWhite(opacity);
+        context.drawTexture(RenderLayer::getGuiTextured, texture, xPos, yPos, uStart, vStart, uEnd, vEnd, textureWidth, textureHeight, i);
     }
     
     @Unique

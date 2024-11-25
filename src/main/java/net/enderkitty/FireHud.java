@@ -40,10 +40,10 @@ public class FireHud implements ClientModInitializer {
 			if (player != null && player.isOnFire() && client.options.getPerspective().isFirstPerson() && 
 					!(!config.renderFireInLava && player.isInLava()) && !(!config.renderWithFireResistance && player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))) {
 				
-				if (config.fireScreenTint && !((SoulFireAccessor) player).fireHud$isRenderSoulFire()) {
+				if (config.fireScreenTint && !((SoulFireEntityAccessor) player).fireHud$isOnSoulFire()) {
 					context.fillGradient(0, 0, width, height, config.fireStartColor, config.fireEndColor);
 				}
-				if (config.fireScreenTint && config.renderSoulFire && ((SoulFireAccessor) player).fireHud$isRenderSoulFire()) {
+				if (config.fireScreenTint && config.renderSoulFire && ((SoulFireEntityAccessor) player).fireHud$isOnSoulFire()) {
 					context.fillGradient(0, 0, width, height, config.soulFireStartColor, config.soulFireEndColor);
 				}
 			}

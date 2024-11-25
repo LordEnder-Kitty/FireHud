@@ -20,6 +20,7 @@
   "text.autoconfig.firehud.option.fireVignette.@Tooltip": "Adds a fiery effect in the corners of the screen when on fire",
   "text.autoconfig.firehud.option.fireVignette": "Fire Vignette",
   "text.autoconfig.firehud.option.vignetteOpacity": "Vignette Opacity",
+  "text.autoconfig.firehud.option.vignetteScale.@Tooltip": "GUI scale of the fire vignette. 0 sets it to match the vanilla GUI scale.",
   "text.autoconfig.firehud.option.vignetteScale": "Vignette Scale",
   
   "text.autoconfig.firehud.option.renderFireHearts.@PrefixText": "Player Hearts",

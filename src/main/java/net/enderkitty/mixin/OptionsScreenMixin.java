@@ -23,8 +23,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Environment(EnvType.CLIENT)
 @Mixin(OptionsScreen.class)
-public class OptionsScreenMixin extends Screen {
+public abstract class OptionsScreenMixin extends Screen {
     @Shadow @Final private ThreePartsLayoutWidget layout;
+    @Shadow protected abstract void refreshWidgetPositions();
+    
     @Unique private static final ButtonTextures TEXTURES = new ButtonTextures(
             Identifier.of(FireHud.MOD_ID, "widget/config_button"), Identifier.of(FireHud.MOD_ID, "widget/config_button_highlighted"));
     
@@ -43,14 +45,14 @@ public class OptionsScreenMixin extends Screen {
             GridWidget gridWidget = new GridWidget();
             gridWidget.getMainPositioner().marginX(4).marginBottom(4).alignHorizontalCenter();
             GridWidget.Adder adder = gridWidget.createAdder(2);
-
+            
             adder.add(button);
             adder.add(EmptyWidget.ofWidth(config.configButtonX), 1);
             adder.add(EmptyWidget.ofHeight(config.configButtonY), 2);
             
             this.layout.addBody(gridWidget);
             this.layout.forEachChild(this::addDrawableChild);
-            this.initTabNavigation();
+            this.refreshWidgetPositions();
         }
     }
 }

@@ -1,6 +1,6 @@
 package net.enderkitty.mixin;
 
-import net.enderkitty.SoulFireAccessor;
+import net.enderkitty.SoulFireEntityAccessor;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.entity.Entity;
@@ -9,16 +9,16 @@ import org.spongepowered.asm.mixin.Unique;
 
 @Environment(EnvType.CLIENT)
 @Mixin(Entity.class)
-public class ClientEntityMixin implements SoulFireAccessor {
-    @Unique private boolean renderSoulFire;
-
+public class ClientEntityMixin implements SoulFireEntityAccessor {
+    @Unique private boolean soulFire;
+    
     @Override
-    public boolean fireHud$isRenderSoulFire() {
-        return renderSoulFire;
+    public boolean fireHud$isOnSoulFire() {
+        return soulFire;
     }
-
+    
     @Override
-    public void fireHud$setRenderSoulFire(boolean renderSoulFire) {
-        this.renderSoulFire = renderSoulFire;
+    public void fireHud$setOnSoulFire(boolean onSoulFire) {
+        this.soulFire = onSoulFire;
     }
 }

@@ -2,14 +2,15 @@ package net.enderkitty.mixin;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.enderkitty.FireHud;
-import net.enderkitty.SoulFireAccessor;
+import net.enderkitty.SoulFireEntityAccessor;
 import net.enderkitty.config.FireHudConfig;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.gui.hud.InGameOverlayRenderer;
 import net.minecraft.client.render.*;
-import net.minecraft.client.render.model.ModelLoader;
+import net.minecraft.client.render.model.ModelBaker;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.client.util.math.MatrixStack;
@@ -50,8 +51,7 @@ public class InGameOverlayRendererMixin {
         }
     }
     
-    @ModifyArg(method = "renderFireOverlay", at = @At(value = "INVOKE", target =
-            "Lnet/minecraft/client/render/VertexConsumer;color(FFFF)Lnet/minecraft/client/render/VertexConsumer;"), index = 3)
+    @ModifyArg(method = "renderFireOverlay", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/VertexConsumer;color(FFFF)Lnet/minecraft/client/render/VertexConsumer;"), index = 3)
     private static float fireOpacity(float red) {
         return config.fireOpacity;
     }
@@ -63,18 +63,18 @@ public class InGameOverlayRendererMixin {
     
     @Redirect(method = "renderFireOverlay", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/SpriteIdentifier;getSprite()Lnet/minecraft/client/texture/Sprite;"))
     private static Sprite getSprite(SpriteIdentifier obj, MinecraftClient client) {
-        if (config.renderSoulFire && client.player != null && ((SoulFireAccessor) client.player).fireHud$isRenderSoulFire()) return SOUL_FIRE_1.getSprite();
+        if (config.renderSoulFire && client.player != null && ((SoulFireEntityAccessor) client.player).fireHud$isOnSoulFire()) return SOUL_FIRE_1.getSprite();
         return obj.getSprite();
     }
     
     
     @Unique
     private static void renderSideFireOverlay(MinecraftClient client, MatrixStack matrices) {
-        RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
         RenderSystem.depthFunc(519);
         RenderSystem.depthMask(false);
         RenderSystem.enableBlend();
-        Sprite sprite = (config.renderSoulFire && client.player != null && ((SoulFireAccessor) client.player).fireHud$isRenderSoulFire() ? SOUL_FIRE_1.getSprite() : ModelLoader.FIRE_1.getSprite());
+        Sprite sprite = (config.renderSoulFire && client.player != null && ((SoulFireEntityAccessor) client.player).fireHud$isOnSoulFire() ? SOUL_FIRE_1.getSprite() : ModelBaker.FIRE_1.getSprite());
         RenderSystem.setShaderTexture(0, sprite.getAtlasId());
         float f = sprite.getMinU();
         float g = sprite.getMaxU();

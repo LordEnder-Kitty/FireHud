@@ -26,8 +26,9 @@ public class FireHudConfig implements ConfigData {
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public VignetteOptions fireVignette = VignetteOptions.OFF;
     public float vignetteOpacity = 1.0f;
-    @ConfigEntry.BoundedDiscrete(min = 1, max = 4)
-    public int vignetteScale = 3;
+    @ConfigEntry.Gui.Tooltip
+    @ConfigEntry.BoundedDiscrete(max = 4)
+    public int vignetteScale = 0;
     
     @ConfigEntry.Gui.PrefixText
     @ConfigEntry.Gui.Tooltip

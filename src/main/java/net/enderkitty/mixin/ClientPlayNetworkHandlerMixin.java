@@ -1,7 +1,7 @@
 package net.enderkitty.mixin;
 
 import net.enderkitty.FireHud;
-import net.enderkitty.SoulFireAccessor;
+import net.enderkitty.SoulFireEntityAccessor;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.Block;
@@ -37,12 +37,12 @@ public class ClientPlayNetworkHandlerMixin {
             Entity sourceEntity = world.getEntityById(packet.sourceDirectId());
             if (targetEntity != null && sourceEntity != null) {
                 if ((sourceEntity instanceof ZombieEntity || sourceEntity instanceof ArrowEntity) && sourceEntity.doesRenderOnFire()) {
-                    ((SoulFireAccessor) targetEntity).fireHud$setRenderSoulFire(((SoulFireAccessor) sourceEntity).fireHud$isRenderSoulFire());
+                    ((SoulFireEntityAccessor) targetEntity).fireHud$setOnSoulFire(((SoulFireEntityAccessor) sourceEntity).fireHud$isOnSoulFire());
                 }
             }
             if (targetEntity != null) {
                 if (packet.createDamageSource(world).isOf(DamageTypes.LIGHTNING_BOLT)) {
-                    ((SoulFireAccessor) targetEntity).fireHud$setRenderSoulFire(false);
+                    ((SoulFireEntityAccessor) targetEntity).fireHud$setOnSoulFire(false);
                 }
             }
         }
@@ -63,9 +63,9 @@ public class ClientPlayNetworkHandlerMixin {
                                 mutable.set(i, j, k);
                                 try {
                                     Block block = entity.getWorld().getBlockState(mutable).getBlock();
-                                    if (block instanceof SoulFireBlock) ((SoulFireAccessor)entity).fireHud$setRenderSoulFire(true);
-                                    if (block instanceof FireBlock) ((SoulFireAccessor)entity).fireHud$setRenderSoulFire(false);
-                                    if (entity.isInLava()) ((SoulFireAccessor)entity).fireHud$setRenderSoulFire(false);
+                                    if (block instanceof SoulFireBlock) ((SoulFireEntityAccessor)entity).fireHud$setOnSoulFire(true);
+                                    if (block instanceof FireBlock) ((SoulFireEntityAccessor)entity).fireHud$setOnSoulFire(false);
+                                    if (entity.isInLava()) ((SoulFireEntityAccessor)entity).fireHud$setOnSoulFire(false);
                                 } catch (Throwable throwable) {
                                     CrashReport crashReport = CrashReport.create(throwable, "Colliding entity with block");
                                     throw new CrashException(crashReport);
