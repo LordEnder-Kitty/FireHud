@@ -19,6 +19,7 @@
   "text.autoconfig.firehud.option.fireVignette.@PrefixText": "更多火焰渲染位置",
   "text.autoconfig.firehud.option.fireVignette.@Tooltip": "当玩家着火时,为玩家屏幕边缘添加火焰UI",
   "text.autoconfig.firehud.option.fireVignette": "边缘火焰渲染",
+  "text.autoconfig.firehud.option.vignetteScale.@Tooltip": "火焰 UI 的大小，设置为 0 以使用原版大小",
   "text.autoconfig.firehud.option.vignetteOpacity": "火焰不透明度",
   "text.autoconfig.firehud.option.vignetteScale": "火焰大小",
   
