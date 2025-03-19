@@ -8,6 +8,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.tag.client.v1.ClientTags;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.CampfireBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
@@ -18,6 +19,9 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.state.property.BooleanProperty;
+import net.minecraft.state.property.Properties;
+import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.ColorHelper;
 import org.spongepowered.asm.mixin.Mixin;
@@ -63,15 +67,14 @@ public abstract class InGameHudMixin {
                         hasFrostWalkerOnBoots = true;
                     }
                 }
-                
+                boolean isOnSoulFire = ((SoulFireEntityAccessor) playerEntity).fireHud$isOnSoulFire();
                 if (playerEntity.isOnFire() || (!hasFrostWalkerOnBoots && ((playerEntity.getSteppingBlockState().getBlock() == Blocks.MAGMA_BLOCK && !playerEntity.bypassesSteppingEffects()) || 
-                        playerEntity.getSteppingBlockState().getBlock() == Blocks.CAMPFIRE))) {
-                    context.drawGuiTexture(RenderLayer::getGuiTextured, getFireHeartTexture(hardcore, half, blinking), x, y, 9, 9);
-                    ci.cancel();
-                }
-                if (config.renderSoulFire) {
-                    if ((playerEntity.isOnFire() && ((SoulFireEntityAccessor) playerEntity).fireHud$isOnSoulFire()) || (!hasFrostWalkerOnBoots && playerEntity.getSteppingBlockState().getBlock() == Blocks.SOUL_CAMPFIRE)) {
+                        playerEntity.getSteppingBlockState().getBlock() instanceof CampfireBlock && playerEntity.getSteppingBlockState().get(Properties.LIT)))) {
+                    if (config.renderSoulFire && (isOnSoulFire || playerEntity.getSteppingBlockState().getBlock() == Blocks.SOUL_CAMPFIRE)) {
                         context.drawGuiTexture(RenderLayer::getGuiTextured, getSoulFireHeartTexture(hardcore, half, blinking), x, y, 9, 9);
+                        ci.cancel();
+                    } else {
+                        context.drawGuiTexture(RenderLayer::getGuiTextured, getFireHeartTexture(hardcore, half, blinking), x, y, 9, 9);
                         ci.cancel();
                     }
                 }
