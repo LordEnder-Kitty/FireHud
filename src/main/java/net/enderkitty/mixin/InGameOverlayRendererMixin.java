@@ -1,15 +1,15 @@
 package net.enderkitty.mixin;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.enderkitty.FireHud;
 import net.enderkitty.SoulFireEntityAccessor;
 import net.enderkitty.config.FireHudConfig;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.gui.hud.InGameOverlayRenderer;
-import net.minecraft.client.render.*;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.model.ModelBaker;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.texture.SpriteAtlasTexture;
@@ -38,7 +38,7 @@ public class InGameOverlayRendererMixin {
     private static void renderOverlays(MinecraftClient client, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
         if (client.player != null && !client.player.isSpectator() && client.player.isOnFire() && config.sideFire &&
                 !(!config.renderFireInLava && client.player.isInLava()) && !(!config.renderWithFireResistance && client.player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))) {
-            renderSideFireOverlay(client, matrices);
+            renderSideFireOverlay(matrices, vertexConsumers);
         }
     }
     
@@ -69,43 +69,35 @@ public class InGameOverlayRendererMixin {
         return instance.getSprite();
     }
     
-    
     @Unique
-    private static void renderSideFireOverlay(MinecraftClient client, MatrixStack matrices) {
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
-        RenderSystem.depthFunc(519);
-        RenderSystem.depthMask(false);
-        RenderSystem.enableBlend();
+    private static void renderSideFireOverlay(MatrixStack matrices, VertexConsumerProvider vertexConsumers) {
+        MinecraftClient client = MinecraftClient.getInstance();
         Sprite sprite = (config.renderSoulFire && client.player != null && ((SoulFireEntityAccessor) client.player).fireHud$isOnSoulFire() ? SOUL_FIRE_1.getSprite() : ModelBaker.FIRE_1.getSprite());
-        RenderSystem.setShaderTexture(0, sprite.getAtlasId());
+        VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getFireScreenEffect(sprite.getAtlasId()));
         float f = sprite.getMinU();
         float g = sprite.getMaxU();
-        float h = (f + g) / 2.0f;
+        float h = (f + g) / 2.0F;
         float i = sprite.getMinV();
         float j = sprite.getMaxV();
-        float k = (i + j) / 2.0f;
-        float l = sprite.getAnimationFrameDelta();
+        float k = (i + j) / 2.0F;
+        float l = sprite.getUvScaleDelta();
         float m = MathHelper.lerp(l, f, h);
         float n = MathHelper.lerp(l, g, h);
         float o = MathHelper.lerp(l, i, k);
         float p = MathHelper.lerp(l, j, k);
-        for (int r = 0; r < 2; ++r) {
+        
+        for (int r = 0; r < 2; r++) {
             matrices.push();
-            matrices.translate((float)(-(r * 2 - 1)) * 0.24f, -1.0f + config.firePos, -0.2f); // y:-0.3f
+            matrices.translate(-(r * 2 - 1) * 0.24F, -1.0f + config.firePos, -0.2F); // -0.3f, 0.0f
             matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(0.0f));
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees((float)(r * 2 - 1) * 70.0f));
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees((r * 2 - 1) * 70.0F));
             matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees((r == 1 ? -10.0f : 10.0f)));
             Matrix4f matrix4f = matrices.peek().getPositionMatrix();
-            BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
-            bufferBuilder.vertex(matrix4f, -0.5f, -0.5f, -0.5f).texture(n, p).color(1.0f, 1.0f, 1.0f, config.fireOpacity);
-            bufferBuilder.vertex(matrix4f, 0.5f, -0.5f, -0.5f).texture(m, p).color(1.0f, 1.0f, 1.0f, config.fireOpacity);
-            bufferBuilder.vertex(matrix4f, 0.5f, 0.5f, -0.5f).texture(m, o).color(1.0f, 1.0f, 1.0f, config.fireOpacity);
-            bufferBuilder.vertex(matrix4f, -0.5f, 0.5f, -0.5f).texture(n, o).color(1.0f, 1.0f, 1.0f, config.fireOpacity);
-            BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+            vertexConsumer.vertex(matrix4f, -0.5F, -0.5F, -0.5F).texture(n, p).color(1.0F, 1.0F, 1.0F, 0.9F);
+            vertexConsumer.vertex(matrix4f, 0.5F, -0.5F, -0.5F).texture(m, p).color(1.0F, 1.0F, 1.0F, 0.9F);
+            vertexConsumer.vertex(matrix4f, 0.5F, 0.5F, -0.5F).texture(m, o).color(1.0F, 1.0F, 1.0F, 0.9F);
+            vertexConsumer.vertex(matrix4f, -0.5F, 0.5F, -0.5F).texture(n, o).color(1.0F, 1.0F, 1.0F, 0.9F);
             matrices.pop();
         }
-        RenderSystem.disableBlend();
-        RenderSystem.depthMask(true);
-        RenderSystem.depthFunc(515);
     }
 }
