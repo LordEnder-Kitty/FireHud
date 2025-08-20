@@ -52,8 +52,15 @@
   "text.autoconfig.firehud.option.lightFogDist.@Tooltip": "The view distance when in lava with Render Lava Fog set to LIGHT_FOG",
   "text.autoconfig.firehud.option.lightFogDist": "Light Fog Distance",
   
+  "text.autoconfig.firehud.option.thermometer.@PrefixText": "Thermometer",
+  "text.autoconfig.firehud.option.thermometer.@Tooltip": "Displays a rough estimate of how long you will be on fire. This may not always be accurate",
+  "text.autoconfig.firehud.option.thermometer": "Thermometer",
+  "text.autoconfig.firehud.option.onlyShowWhenOnFire": "Only Show When On Fire",
+  "text.autoconfig.firehud.option.showFireTicks": "Show Fire Ticks",
+  "text.autoconfig.firehud.option.onLeftSide": "On Left Side",
+  
   "text.autoconfig.firehud.option.renderWithFireResistance.@PrefixText": "Fire Resistance",
-  "text.autoconfig.firehud.option.renderWithFireResistance.@Tooltip": "Toggles rendering the hud when under the Fire Resistance status effect",
+  "text.autoconfig.firehud.option.renderWithFireResistance.@Tooltip": "Toggles rendering the fire hud when under the Fire Resistance status effect",
   "text.autoconfig.firehud.option.renderWithFireResistance": "Render With Fire Resistance",
   "text.autoconfig.firehud.option.displayFireResTimer.@Tooltip": "Displays a timer above the hotbar which shows how many seconds remaining on any applied fire resistance effect",
   "text.autoconfig.firehud.option.displayFireResTimer": "Display Fire Resistance Timer",

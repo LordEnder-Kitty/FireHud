@@ -5,6 +5,7 @@
   "client": [
     "BackgroundRendererMixin",
     "ClientEntityMixin",
+    "ClientPlayerEntityMixin",
     "ClientPlayNetworkHandlerMixin",
     "EntityRenderDispatcherMixin",
     "EntityRendererMixin",

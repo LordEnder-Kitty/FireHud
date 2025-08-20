@@ -67,6 +67,13 @@ public class FireHudConfig implements ConfigData {
     
     @ConfigEntry.Gui.PrefixText
     @ConfigEntry.Gui.Tooltip
+    public boolean thermometer = false;
+    public boolean onlyShowWhenOnFire = true;
+    public boolean showFireTicks = false;
+    public boolean onLeftSide = false;
+    
+    @ConfigEntry.Gui.PrefixText
+    @ConfigEntry.Gui.Tooltip
     public boolean renderWithFireResistance = true;
     @ConfigEntry.Gui.Tooltip
     public boolean displayFireResTimer = false;
