@@ -3,7 +3,6 @@
   "package": "net.enderkitty.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
-    "BackgroundRendererMixin",
     "ClientEntityMixin",
     "ClientPlayerEntityMixin",
     "ClientPlayNetworkHandlerMixin",
@@ -13,6 +12,7 @@
     "FireBlockMixin",
     "InGameHudMixin",
     "InGameOverlayRendererMixin",
+    "LavaFogModifierMixin",
     "OptionsScreenMixin"
   ],
   "injectors": {

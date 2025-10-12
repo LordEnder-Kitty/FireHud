@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.tag.client.v1.ClientTags;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.CampfireBlock;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.render.RenderLayer;
@@ -69,10 +70,10 @@ public abstract class InGameHudMixin {
                 if (playerEntity.isOnFire() || (!hasFrostWalkerOnBoots && ((playerEntity.getSteppingBlockState().getBlock() == Blocks.MAGMA_BLOCK && !playerEntity.bypassesSteppingEffects()) || 
                         playerEntity.getSteppingBlockState().getBlock() instanceof CampfireBlock && playerEntity.getSteppingBlockState().get(Properties.LIT)))) {
                     if (config.renderSoulFire && (isOnSoulFire || playerEntity.getSteppingBlockState().getBlock() == Blocks.SOUL_CAMPFIRE)) {
-                        context.drawGuiTexture(RenderLayer::getGuiTextured, getSoulFireHeartTexture(hardcore, half, blinking), x, y, 9, 9);
+                        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, getSoulFireHeartTexture(hardcore, half, blinking), x, y, 9, 9);
                         ci.cancel();
                     } else {
-                        context.drawGuiTexture(RenderLayer::getGuiTextured, getFireHeartTexture(hardcore, half, blinking), x, y, 9, 9);
+                        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, getFireHeartTexture(hardcore, half, blinking), x, y, 9, 9);
                         ci.cancel();
                     }
                 }
@@ -143,7 +144,7 @@ public abstract class InGameHudMixin {
     @Unique
     private void renderOverlay(DrawContext context, Identifier texture, float opacity, int xPos, int yPos, int uStart, int vStart, int uEnd, int vEnd, int textureWidth, int textureHeight) {
         int i = ColorHelper.getWhite(opacity);
-        context.drawTexture(RenderLayer::getGuiTextured, texture, xPos, yPos, uStart, vStart, uEnd, vEnd, textureWidth, textureHeight, i);
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, texture, xPos, yPos, uStart, vStart, uEnd, vEnd, textureWidth, textureHeight, i);
     }
     
     @Unique

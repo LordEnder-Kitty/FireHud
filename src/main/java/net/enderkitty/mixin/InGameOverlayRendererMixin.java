@@ -1,5 +1,6 @@
 package net.enderkitty.mixin;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import net.enderkitty.FireHud;
 import net.enderkitty.SoulFireEntityAccessor;
 import net.enderkitty.config.FireHudConfig;
@@ -7,6 +8,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.InGameOverlayRenderer;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -20,7 +22,9 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import org.joml.Matrix4f;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -31,14 +35,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Environment(EnvType.CLIENT)
 @Mixin(InGameOverlayRenderer.class)
 public class InGameOverlayRendererMixin {
+    @Shadow @Final private VertexConsumerProvider vertexConsumers;
     @Unique private static final FireHudConfig config = FireHud.getConfig();
     @Unique private static final SpriteIdentifier SOUL_FIRE_1 = new SpriteIdentifier(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE, Identifier.of("block/soul_fire_1"));
     
     @Inject(method = "renderOverlays", at = @At("TAIL"))
-    private static void renderOverlays(MinecraftClient client, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
-        if (client.player != null && !client.player.isSpectator() && client.player.isOnFire() && config.sideFire &&
-                !(!config.renderFireInLava && client.player.isInLava()) && !(!config.renderWithFireResistance && client.player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))) {
-            renderSideFireOverlay(matrices, vertexConsumers);
+    private void renderOverlays(boolean sleeping, float tickProgress, CallbackInfo ci, @Local MatrixStack matrices) {
+        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        if (player != null && !player.isSpectator() && player.isOnFire() && config.sideFire &&
+                !(!config.renderFireInLava && player.isInLava()) && !(!config.renderWithFireResistance && player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))) {
+            renderSideFireOverlay(matrices, this.vertexConsumers);
         }
     }
     

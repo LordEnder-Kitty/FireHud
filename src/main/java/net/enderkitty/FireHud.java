@@ -6,13 +6,13 @@ import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.enderkitty.config.FireHudConfig;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.HudLayerRegistrationCallback;
-import net.fabricmc.fabric.api.client.rendering.v1.IdentifiedLayer;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffectUtil;
@@ -29,6 +29,7 @@ public class FireHud implements ClientModInitializer {
 	public static final String MOD_ID = "firehud";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	private static FireHudConfig config;
+    private static final Identifier FIRE_TINT = Identifier.of(MOD_ID, "fire_tint");
     private static final Identifier FIRE_METER = Identifier.of(MOD_ID, "fire_meter");
     private static final Identifier THERMOMETER = Identifier.of(MOD_ID, "textures/gui/sprites/hud/thermometer.png"); 
     private static final Identifier THERMOMETER_TEMP = Identifier.of(MOD_ID, "textures/gui/sprites/hud/thermometer_temp.png"); 
@@ -41,9 +42,8 @@ public class FireHud implements ClientModInitializer {
 			FireHud.config = configHolder.getConfig();
 		}
 		
-		HudLayerRegistrationCallback.EVENT.register(layeredDrawer -> {
-			layeredDrawer.attachLayerAfter(IdentifiedLayer.MISC_OVERLAYS, IdentifiedLayer.of(Identifier.of(MOD_ID, "fire_tint"), this::fireTint));
-		});
+        HudElementRegistry.attachElementAfter(VanillaHudElements.MISC_OVERLAYS, FIRE_TINT, this::fireTint);
+        HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, FIRE_METER, this::thermometer);
 		
 		ClientTickEvents.START_CLIENT_TICK.register(client -> {
             ClientPlayerEntity player = client.player;
@@ -85,13 +85,9 @@ public class FireHud implements ClientModInitializer {
             }
             
 		});
-        
-        HudLayerRegistrationCallback.EVENT.register(layeredDrawer ->
-                layeredDrawer.attachLayerAfter(IdentifiedLayer.HOTBAR_AND_BARS, FIRE_METER, this::render)
-        );
 	}
 	
-    private void render(DrawContext context, RenderTickCounter tickCounter) {
+    private void thermometer(DrawContext context, RenderTickCounter tickCounter) {
         MinecraftClient client = MinecraftClient.getInstance();
         
         // For some reason it's giving me shit so copy/paste code here 'cause I don't wanna work on this anymore
@@ -119,12 +115,12 @@ public class FireHud implements ClientModInitializer {
                         thermNumPos(context, player), context.getScaledWindowHeight() / 2 - 22 + 44, Colors.WHITE, true);
             }
             
-            context.drawTexture(RenderLayer::getGuiTextured, THERMOMETER,
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, THERMOMETER,
                     config.onLeftSide ? 6 : context.getScaledWindowWidth() - 16, context.getScaledWindowHeight() / 2 - 22,
                     0, 0, 10, 44, 10, 44);
             if (client.player.isOnFire()) {
                 int i = MathHelper.ceil(getThermProgress() * 43) + 1;
-                context.drawTexture(RenderLayer::getGuiTextured, thermSprite(),
+                context.drawTexture(RenderPipelines.GUI_TEXTURED, thermSprite(),
                         config.onLeftSide ? 6 : context.getScaledWindowWidth() - 16, context.getScaledWindowHeight() / 2 - 22 + 44 - i,
                         0, 44 - i, 10, i, 10, 44);
             }
