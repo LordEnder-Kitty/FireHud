@@ -10,15 +10,16 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.InGameOverlayRenderer;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.TexturedRenderLayers;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.model.ModelBaker;
 import net.minecraft.client.texture.Sprite;
-import net.minecraft.client.texture.SpriteAtlasTexture;
+import net.minecraft.client.texture.SpriteHolder;
 import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import org.joml.Matrix4f;
@@ -29,18 +30,20 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Environment(EnvType.CLIENT)
 @Mixin(InGameOverlayRenderer.class)
 public class InGameOverlayRendererMixin {
     @Shadow @Final private VertexConsumerProvider vertexConsumers;
+    @Shadow
+    @Final
+    private SpriteHolder spriteHolder;
     @Unique private static final FireHudConfig config = FireHud.getConfig();
-    @Unique private static final SpriteIdentifier SOUL_FIRE_1 = new SpriteIdentifier(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE, Identifier.of("block/soul_fire_1"));
+    @Unique private static final SpriteIdentifier SOUL_FIRE_1 = TexturedRenderLayers.BLOCK_SPRITE_MAPPER.mapVanilla("soul_fire_1");
     
     @Inject(method = "renderOverlays", at = @At("TAIL"))
-    private void renderOverlays(boolean sleeping, float tickProgress, CallbackInfo ci, @Local MatrixStack matrices) {
+    private void renderOverlays(boolean sleeping, float tickProgress, OrderedRenderCommandQueue queue, CallbackInfo ci, @Local MatrixStack matrices) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player != null && !player.isSpectator() && player.isOnFire() && config.sideFire &&
                 !(!config.renderFireInLava && player.isInLava()) && !(!config.renderWithFireResistance && player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))) {
@@ -49,7 +52,7 @@ public class InGameOverlayRendererMixin {
     }
     
     @Inject(method = "renderFireOverlay", at = @At("HEAD"), cancellable = true)
-    private static void renderVanillaHud(MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
+    private static void renderVanillaHud(MatrixStack matrices, VertexConsumerProvider vertexConsumers, Sprite sprite, CallbackInfo ci) {
         if (!config.renderVanillaHud) ci.cancel();
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player != null && client.player.isOnFire()) {
@@ -68,17 +71,16 @@ public class InGameOverlayRendererMixin {
         return -1.0f + config.firePos;
     }
     
-    @Redirect(method = "renderFireOverlay", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/SpriteIdentifier;getSprite()Lnet/minecraft/client/texture/Sprite;"))
-    private static Sprite getSprite(SpriteIdentifier instance) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (config.renderSoulFire && client.player != null && ((SoulFireEntityAccessor) client.player).fireHud$isOnSoulFire()) return SOUL_FIRE_1.getSprite();
-        return instance.getSprite();
+    @ModifyArg(method = "renderOverlays", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameOverlayRenderer;renderFireOverlay(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/texture/Sprite;)V"), index = 2)
+    private Sprite test(Sprite sprite) {
+        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        return (config.renderSoulFire && player != null && ((SoulFireEntityAccessor) player).fireHud$isOnSoulFire()) ? this.spriteHolder.getSprite(SOUL_FIRE_1) : sprite;
     }
     
     @Unique
-    private static void renderSideFireOverlay(MatrixStack matrices, VertexConsumerProvider vertexConsumers) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        Sprite sprite = (config.renderSoulFire && client.player != null && ((SoulFireEntityAccessor) client.player).fireHud$isOnSoulFire() ? SOUL_FIRE_1.getSprite() : ModelBaker.FIRE_1.getSprite());
+    private void renderSideFireOverlay(MatrixStack matrices, VertexConsumerProvider vertexConsumers) {
+        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        Sprite sprite = (config.renderSoulFire && player != null && ((SoulFireEntityAccessor) player).fireHud$isOnSoulFire() ? this.spriteHolder.getSprite(SOUL_FIRE_1) : this.spriteHolder.getSprite(ModelBaker.FIRE_1));
         VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getFireScreenEffect(sprite.getAtlasId()));
         float f = sprite.getMinU();
         float g = sprite.getMaxU();

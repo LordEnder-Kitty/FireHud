@@ -6,7 +6,7 @@
     "ClientEntityMixin",
     "ClientPlayerEntityMixin",
     "ClientPlayNetworkHandlerMixin",
-    "EntityRenderDispatcherMixin",
+    "FireCommandRendererMixin",
     "EntityRendererMixin",
     "EntityRenderStateMixin",
     "FireBlockMixin",

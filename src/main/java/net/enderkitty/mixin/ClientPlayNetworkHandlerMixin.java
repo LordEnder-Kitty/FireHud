@@ -55,14 +55,14 @@ public class ClientPlayNetworkHandlerMixin {
                 Box box = entity.getBoundingBox();
                 BlockPos blockPos = new BlockPos(MathHelper.floor(box.minX + 0.001), MathHelper.floor(box.minY + 0.001), MathHelper.floor(box.minZ + 0.001));
                 BlockPos blockPos2 = new BlockPos(MathHelper.floor(box.maxX - 0.001), MathHelper.floor(box.maxY - 0.001), MathHelper.floor(box.maxZ - 0.001));
-                if (entity.getWorld() != null && entity.getWorld().isRegionLoaded(blockPos, blockPos2)) {
+                if (entity.getEntityWorld() != null && entity.getEntityWorld().isRegionLoaded(blockPos, blockPos2)) {
                     BlockPos.Mutable mutable = new BlockPos.Mutable();
                     for (int i = blockPos.getX(); i <= blockPos2.getX(); ++i) {
                         for (int j = blockPos.getY(); j <= blockPos2.getY(); ++j) {
                             for (int k = blockPos.getZ(); k <= blockPos2.getZ(); ++k) {
                                 mutable.set(i, j, k);
                                 try {
-                                    Block block = entity.getWorld().getBlockState(mutable).getBlock();
+                                    Block block = entity.getEntityWorld().getBlockState(mutable).getBlock();
                                     if (block instanceof SoulFireBlock) ((SoulFireEntityAccessor)entity).fireHud$setOnSoulFire(true);
                                     if (block instanceof FireBlock) ((SoulFireEntityAccessor)entity).fireHud$setOnSoulFire(false);
                                     if (entity.isInLava()) ((SoulFireEntityAccessor)entity).fireHud$setOnSoulFire(false);

@@ -58,7 +58,7 @@ public abstract class InGameHudMixin {
     
     @Inject(method = "drawHeart", at = @At("HEAD"), cancellable = true)
     private void drawHeart(DrawContext context, InGameHud.HeartType type, int x, int y, boolean hardcore, boolean blinking, boolean half, CallbackInfo ci) {
-        if (MinecraftClient.getInstance().cameraEntity instanceof PlayerEntity playerEntity && !(!config.renderWithFireResistance && playerEntity.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))) {
+        if (MinecraftClient.getInstance().getCameraEntity() instanceof PlayerEntity playerEntity && !(!config.renderWithFireResistance && playerEntity.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))) {
             if (config.renderFireHearts && type == InGameHud.HeartType.NORMAL) {
                 boolean hasFrostWalkerOnBoots = false;
                 for (RegistryEntry<Enchantment> enchantment : playerEntity.getEquippedStack(EquipmentSlot.FEET).getEnchantments().getEnchantments()) {

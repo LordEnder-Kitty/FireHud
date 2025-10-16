@@ -37,7 +37,7 @@ public class FireBlockMixin {
             if (clientFireTick < 0) {
                 ((ClientFireTick) player).fireHud$setClientFireTick(clientFireTick + 1);
             } else {
-                int i = entity.getWorld().getRandom().nextBetweenExclusive(1, 3);
+                int i = entity.getEntityWorld().getRandom().nextBetweenExclusive(1, 3);
                 ((ClientFireTick) player).fireHud$setClientFireTick(clientFireTick + i);
             }
 
