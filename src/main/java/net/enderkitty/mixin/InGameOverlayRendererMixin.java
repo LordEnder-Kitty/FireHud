@@ -9,10 +9,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.InGameOverlayRenderer;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.TexturedRenderLayers;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.*;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.model.ModelBaker;
 import net.minecraft.client.texture.Sprite;
@@ -81,18 +78,11 @@ public class InGameOverlayRendererMixin {
     private void renderSideFireOverlay(MatrixStack matrices, VertexConsumerProvider vertexConsumers) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         Sprite sprite = (config.renderSoulFire && player != null && ((SoulFireEntityAccessor) player).fireHud$isOnSoulFire() ? this.spriteHolder.getSprite(SOUL_FIRE_1) : this.spriteHolder.getSprite(ModelBaker.FIRE_1));
-        VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getFireScreenEffect(sprite.getAtlasId()));
-        float f = sprite.getMinU();
-        float g = sprite.getMaxU();
-        float h = (f + g) / 2.0F;
-        float i = sprite.getMinV();
-        float j = sprite.getMaxV();
-        float k = (i + j) / 2.0F;
-        float l = sprite.getUvScaleDelta();
-        float m = MathHelper.lerp(l, f, h);
-        float n = MathHelper.lerp(l, g, h);
-        float o = MathHelper.lerp(l, i, k);
-        float p = MathHelper.lerp(l, j, k);
+        VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayers.fireScreenEffect(sprite.getAtlasId()));
+        float m = sprite.getMinU();
+        float n = sprite.getMaxU();
+        float o = sprite.getMinV();
+        float p = sprite.getMaxV();
         
         for (int r = 0; r < 2; r++) {
             matrices.push();
