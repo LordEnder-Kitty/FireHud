@@ -1,7 +1,6 @@
 package net.enderkitty;
 
 import me.shedaniel.autoconfig.AutoConfig;
-import me.shedaniel.autoconfig.ConfigHolder;
 import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.enderkitty.config.FireHudConfig;
 import net.fabricmc.api.ClientModInitializer;
@@ -9,175 +8,156 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffectUtil;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Colors;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.CommonColors;
+import net.minecraft.util.Mth;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffectUtil;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.player.Player;
 
 public class FireHud implements ClientModInitializer {
-	public static final String MOD_ID = "firehud";
-    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-	private static FireHudConfig config;
-    private static final Identifier FIRE_TINT = Identifier.of(MOD_ID, "fire_tint");
-    private static final Identifier FIRE_METER = Identifier.of(MOD_ID, "fire_meter");
-    private static final Identifier THERMOMETER = Identifier.of(MOD_ID, "textures/gui/sprites/hud/thermometer.png"); 
-    private static final Identifier THERMOMETER_TEMP = Identifier.of(MOD_ID, "textures/gui/sprites/hud/thermometer_temp.png"); 
-    private static final Identifier THERMOMETER_TEMP_SOUL = Identifier.of(MOD_ID, "textures/gui/sprites/hud/thermometer_temp_soul.png"); 
-    
-	@Override
-	public void onInitializeClient() {
-		if (isClothConfigLoaded()) {
-			ConfigHolder<FireHudConfig> configHolder = AutoConfig.register(FireHudConfig.class, GsonConfigSerializer::new);
-			FireHud.config = configHolder.getConfig();
-		}
-		
+    public static final String MOD_ID = "firehud";
+    /** Fire tick count the thermometer scales against. */
+    private static final int MAX_FIRE_TICKS = 300;
+
+    // Defaults stand in until (and unless) Cloth Config hands us the saved ones, so no consumer has to
+    // care whether the optional dependency is present
+    private static FireHudConfig config = new FireHudConfig();
+
+    private static final Identifier FIRE_TINT = id("fire_tint");
+    private static final Identifier FIRE_METER = id("fire_meter");
+    private static final Identifier THERMOMETER = id("textures/gui/sprites/hud/thermometer.png");
+    private static final Identifier THERMOMETER_TEMP = id("textures/gui/sprites/hud/thermometer_temp.png");
+    private static final Identifier THERMOMETER_TEMP_SOUL = id("textures/gui/sprites/hud/thermometer_temp_soul.png");
+    private static final Component FIRE_RES_LABEL = Component.translatable("text.firehud.hud.fireResTimer");
+
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, path);
+    }
+
+    @Override
+    public void onInitializeClient() {
+        if (isClothConfigLoaded()) {
+            config = AutoConfig.register(FireHudConfig.class, GsonConfigSerializer::new).getConfig();
+        }
+
         HudElementRegistry.attachElementAfter(VanillaHudElements.MISC_OVERLAYS, FIRE_TINT, this::fireTint);
         HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, FIRE_METER, this::thermometer);
-		
-		ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            ClientPlayerEntity player = client.player;
-			if (player != null && client.world != null) {
-				StatusEffectInstance fireRes = player.getStatusEffect(StatusEffects.FIRE_RESISTANCE);
-				
-                // Fire res timer
-				if (config.displayFireResTimer && player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE) && fireRes != null && !fireRes.isInfinite()) {
-					String styling = fireRes.getDuration() > 120 && fireRes.getDuration() <= 220 ? "§6" : fireRes.getDuration() <= 120 ? "§4" : "§f";
-					
-					Text durationSeconds = StatusEffectUtil.getDurationText(fireRes, 1.0f, client.world.getTickManager().getTickRate());
-					Text durationTicks = Text.literal(String.valueOf(player.getStatusEffect(StatusEffects.FIRE_RESISTANCE).getDuration()));
-					Text fireResText = Text.translatable("text.firehud.hud.fireResTimer");
-					Text text = Text.literal(fireResText.getString() + styling + (config.fireResTimerAsTicks ? durationTicks : durationSeconds).getString());
-					
-					if (config.renderWithTimeLeft == 0) player.sendMessage(text, true);
-					else if (config.renderWithTimeLeft > 0 && fireRes.getDuration() <= config.renderWithTimeLeft * 20) {
-						player.sendMessage(text, true);
-					}
-				}
-                
-                // Thermometer
-                if (config.thermometer) {
-                    int clientFireTick = ((ClientFireTick) player).fireHud$clientFireTick();
 
-                    if (clientFireTick > 0) {
-                        if (player.isInCreativeMode() || !player.isOnFire()) { // Why the fuck doesn't this work?!!!!
-                            ((ClientFireTick) player).fireHud$setClientFireTick(0);
-                        }
-                        if (client.getServer() == null || !client.getServer().isPaused()) {
-                            if (player.isFireImmune()) {
-                                ((ClientFireTick) player).fireHud$setClientFireTick(clientFireTick - 4);
-                            } else {
-                                ((ClientFireTick) player).fireHud$setClientFireTick(clientFireTick - 1);
-                            }
-                        }
-                    }
-                }
-            }
-            
-		});
-	}
-	
-    private void thermometer(DrawContext context, RenderTickCounter tickCounter) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        
-        // For some reason it's giving me shit so copy/paste code here 'cause I don't wanna work on this anymore
-        if (client.player != null) {
-            int clientFireTick = ((ClientFireTick) client.player).fireHud$clientFireTick();
-            if (clientFireTick > 0) {
-                if (client.player.isInCreativeMode() || !client.player.isOnFire()) {
-                    ((ClientFireTick) client.player).fireHud$setClientFireTick(0);
-                }
-            }
-        }
-        
-        if (config.thermometer) {
-            if (!config.onlyShowWhenOnFire) {
-                renderTherm(context, client);
-            } else if (client.player != null && client.player.isOnFire()) {
-                renderTherm(context, client);
-            }
-        }
-    }
-    private void renderTherm(DrawContext context, MinecraftClient client) {
-        if (config.thermometer && client.player instanceof ClientFireTick player) {
-            if (config.showFireTicks) {
-                context.drawText(client.textRenderer, Text.literal(String.valueOf(player.fireHud$clientFireTick())),
-                        thermNumPos(context, player), context.getScaledWindowHeight() / 2 - 22 + 44, Colors.WHITE, true);
-            }
-            
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, THERMOMETER,
-                    config.onLeftSide ? 6 : context.getScaledWindowWidth() - 16, context.getScaledWindowHeight() / 2 - 22,
-                    0, 0, 10, 44, 10, 44);
-            if (client.player.isOnFire()) {
-                int i = MathHelper.ceil(getThermProgress() * 43) + 1;
-                context.drawTexture(RenderPipelines.GUI_TEXTURED, thermSprite(),
-                        config.onLeftSide ? 6 : context.getScaledWindowWidth() - 16, context.getScaledWindowHeight() / 2 - 22 + 44 - i,
-                        0, 44 - i, 10, i, 10, 44);
-            }
-        }
-    }
-    private Identifier thermSprite() {
-        SoulFireEntityAccessor player = (SoulFireEntityAccessor) MinecraftClient.getInstance().player;
-        return player != null && player.fireHud$isOnSoulFire() ? THERMOMETER_TEMP_SOUL : THERMOMETER_TEMP;
-    }
-    private int thermNumPos(DrawContext context, ClientFireTick player) {
-        int length = String.valueOf(player.fireHud$clientFireTick()).length();
-        int value = 14;
-        for (int i = 1; i < length; i++) {
-            value += 6 * i - 6;
-        }
-        // The for loop was retarded
-        return config.onLeftSide ? 9 : context.getScaledWindowWidth() - switch (length) {
-            case 1 -> 14;
-            case 2 -> 20;
-            case 3 -> 26;
-            case 4 -> 32;
-            case 5 -> 38;
-            default -> value;
-        };
-    }
-    public float getThermProgress() {
-        ClientPlayerEntity playerEntity = MinecraftClient.getInstance().player;
-        if (playerEntity instanceof ClientFireTick player) {
-            int max = 300;
-            return MathHelper.clamp((float) player.fireHud$clientFireTick() / max, 0.0f, 1.0f);
-        } else return 0.0f;
-    }
-    
-	private void fireTint(DrawContext context, RenderTickCounter tickCounter) {
-		MinecraftClient client = MinecraftClient.getInstance();
-		PlayerEntity player = client.player;
-		int width = context.getScaledWindowWidth();
-		int height = context.getScaledWindowHeight();
+        ClientTickEvents.START_CLIENT_TICK.register(client -> {
+            LocalPlayer player = client.player;
+            if (player == null || client.level == null) return;
 
-		if (player != null && player.isOnFire() && client.options.getPerspective().isFirstPerson() &&
-				!(!config.renderFireInLava && player.isInLava()) && !(!config.renderWithFireResistance && player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))) {
+            if (config.displayFireResTimer) fireResTimer(client, player);
+            if (config.thermometer) tickFireMeter(client, player);
+        });
+    }
 
-			if (config.fireScreenTint && !((SoulFireEntityAccessor) player).fireHud$isOnSoulFire()) {
-				context.fillGradient(0, 0, width, height, config.fireStartColor, config.fireEndColor);
-			}
-			if (config.fireScreenTint && config.renderSoulFire && ((SoulFireEntityAccessor) player).fireHud$isOnSoulFire()) {
-				context.fillGradient(0, 0, width, height, config.soulFireStartColor, config.soulFireEndColor);
-			}
-		}
-	}
-    
-    
-	public static FireHudConfig getConfig() {
-		return FireHud.config;
-	}
-	
-	public static boolean isClothConfigLoaded() {
-		return FabricLoader.getInstance().isModLoaded("cloth-config2");
-	}
+    private static void fireResTimer(Minecraft client, LocalPlayer player) {
+        MobEffectInstance fireRes = player.getEffect(MobEffects.FIRE_RESISTANCE);
+        if (fireRes == null || fireRes.isInfiniteDuration()) return;
+
+        int duration = fireRes.getDuration();
+        int threshold = config.renderWithTimeLeft;
+        if (threshold < 0 || (threshold > 0 && duration > threshold * 20)) return;
+
+        ChatFormatting styling = duration <= 120 ? ChatFormatting.DARK_RED
+                : duration <= 220 ? ChatFormatting.GOLD
+                : ChatFormatting.WHITE;
+        Component left = config.fireResTimerAsTicks
+                ? Component.literal(String.valueOf(duration))
+                : MobEffectUtil.formatDuration(fireRes, 1.0f, client.level.tickRateManager().tickrate());
+
+        player.sendOverlayMessage(FIRE_RES_LABEL.copy().append(left.copy().withStyle(styling)));
+    }
+
+    private static void tickFireMeter(Minecraft client, LocalPlayer player) {
+        ClientFireTick fire = (ClientFireTick) player;
+        int ticks = fire.fireHud$clientFireTick();
+        if (ticks <= 0) return;
+
+        clearIfExtinguished(player);
+        if (client.getSingleplayerServer() != null && client.getSingleplayerServer().isPaused()) return;
+        fire.fireHud$setClientFireTick(ticks - (player.fireImmune() ? 4 : 1));
+    }
+
+    /** Run from the HUD element as well, because the tick loop stops while a singleplayer world is paused. */
+    private static void clearIfExtinguished(LocalPlayer player) {
+        ClientFireTick fire = (ClientFireTick) player;
+        if (fire.fireHud$clientFireTick() > 0 && (player.isCreative() || !player.isOnFire())) {
+            fire.fireHud$setClientFireTick(0);
+        }
+    }
+
+    private void thermometer(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+        if (!config.thermometer) return;
+
+        Minecraft client = Minecraft.getInstance();
+        if (!(client.player instanceof ClientFireTick fire)) return;
+
+        clearIfExtinguished(client.player);
+        if (config.onlyShowWhenOnFire && !client.player.isOnFire()) return;
+
+        int x = config.onLeftSide ? 6 : graphics.guiWidth() - 16;
+        int top = graphics.guiHeight() / 2 - 22;
+
+        if (config.showFireTicks) {
+            String ticks = String.valueOf(fire.fireHud$clientFireTick());
+            int textX = config.onLeftSide ? 9 : graphics.guiWidth() - 8 - client.font.width(ticks);
+            graphics.text(client.font, Component.literal(ticks), textX, top + 44, CommonColors.WHITE, true);
+        }
+
+        graphics.blit(RenderPipelines.GUI_TEXTURED, THERMOMETER, x, top, 0.0f, 0.0f, 10, 44, 10, 44);
+
+        if (client.player.isOnFire()) {
+            float progress = Mth.clamp((float) fire.fireHud$clientFireTick() / MAX_FIRE_TICKS, 0.0f, 1.0f);
+            int filled = Mth.ceil(progress * 43) + 1;
+            Identifier temp = ((SoulFireHolder) client.player).fireHud$isOnSoulFire() ? THERMOMETER_TEMP_SOUL : THERMOMETER_TEMP;
+            graphics.blit(RenderPipelines.GUI_TEXTURED, temp, x, top + 44 - filled, 0.0f, 44 - filled, 10, filled, 10, 44);
+        }
+    }
+
+    private void fireTint(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+        if (!config.fireScreenTint) return;
+
+        Minecraft client = Minecraft.getInstance();
+        Player player = client.player;
+        if (player == null || !player.isOnFire() || !client.options.getCameraType().isFirstPerson()) return;
+        if (suppressed(player, config.renderFireInLava)) return;
+
+        boolean soul = ((SoulFireHolder) player).fireHud$isOnSoulFire();
+        if (soul && !config.renderSoulFire) return;
+
+        graphics.fillGradient(0, 0, graphics.guiWidth(), graphics.guiHeight(),
+                soul ? config.soulFireStartColor : config.fireStartColor,
+                soul ? config.soulFireEndColor : config.fireEndColor);
+    }
+
+    /**
+     * The lava / fire resistance pair that gates every fire visual. The lava option is the caller's own, because
+     * the first person and third person overlays each have one.
+     */
+    public static boolean suppressed(Player player, boolean renderInLava) {
+        return (!renderInLava && player.isInLava()) || fireResSuppressed(player);
+    }
+
+    public static boolean fireResSuppressed(Player player) {
+        return !config.renderWithFireResistance && player.hasEffect(MobEffects.FIRE_RESISTANCE);
+    }
+
+    public static FireHudConfig getConfig() {
+        return FireHud.config;
+    }
+
+    public static boolean isClothConfigLoaded() {
+        return FabricLoader.getInstance().isModLoaded("cloth-config2");
+    }
 }
